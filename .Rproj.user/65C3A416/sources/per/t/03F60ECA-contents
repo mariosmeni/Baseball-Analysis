@@ -1,0 +1,156 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+---
+title: "Coursework_MAP501_2021"
+author: "Eugenie Hunsicker"
+date: today
+output:
+  html_document:
+    self_contained: true
+    highlight: textmate  # specifies the syntax highlighting style
+    toc: true # should a table of contents (TOC) be shown in the document?
+    toc_depth: 2 # the number of levels (e.g. section, subsection, subsubsection) shown in the TOC
+    number_sections: false # should the sections be numbered?
+
+---
+# Instructions
+In this coursework, we will be using several datasets about baseball from the package 'Lahman'.  You can access the list of datasets and all of the variables contained in each one by examining this package in the Packages tab in RStudio.
+
+Please do not change anything in the Preamble section.  
+
+Marks are given for each part of each question in the form [C (points for code)+ D (points for discussion)] .  To achieve full points for code, code must use tidyverse syntax where possible.  
+
+
+# Preamble
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  comment = "",
+  results = "hold",
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 4,
+  fig.height = 2.6,
+  fig.align = "center"
+)
+```
+
+```{r, message = FALSE, warning = FALSE}
+library("tidyverse")
+library("magrittr")
+library("here")
+library("janitor")
+library("lubridate")
+library("gridExtra")
+library("readxl")
+library("glmnet")
+library("Lahman")
+library("viridis")
+library("lindia")
+library("lme4")
+library("caret")
+library("pROC")
+
+```
+
+# 1. Datasets
+
+a.  [3 + 0 points] Create a new dataset called 'Peopledata' that contains all of the variables in the 'People' dataset by
+
+    i. removing all birth information except birthYear and birthCountry and all death information, along with the variable finalGame;
+    
+```{r}
+
+Peopledata <- 
+
+```
+    
+    
+    
+    
+    ii. replacing birthCountry is by bornUSA, a logical variable indicating if the player was born in the USA;
+
+
+b.  [5 + 0 points] Create new datasets called Battingdata and Fieldingdata by 
+
+    i. choosing data from the years 1985 and 2015,
+    
+    ii. selecting only those variables that for those years have fewer than 25 missing cases, 
+    
+    iii. removing the variable 'G' from the batting dataset and removing the variables "teamID" and "lgID" from both datasets, 
+    
+    iv. creating a variable in 'Battingdata' called batav which is equal to the number of hits (H) over the number of at bats (AB) if the number of hits >0, and =0 if H=0.
+    
+
+c.  [6 + 0 points] Create a dataset 'Playerdata' from the dataset 'Salaries' by 
+    
+    i. selecting data from the years 1985 and 2015, 
+    
+    ii. adding all distinct variables from the Fieldingdata, Battingdata and Peopledata datasets,
+    
+    iii. creating a new variable 'allstar' indicating if the player appears anywhere in the AllstarFull dataset,
+    
+    iv. creating a new variable 'age' equal to each player's age in the relevant year,
+    
+    iv. dropping incomplete cases from the dataset,
+    
+    v. dropping unused levels of any categorical variable.
+
+d.  [4 + 0 points] Create a dataset called 'TeamSalaries' in which there is a row for each team and each year and the variables are:
+    
+    i. 'Rostercost' = the sum of all player salaries for the given team in the given year
+    
+    ii. 'meansalary' = the mean salary for that team that year
+    
+    iii. 'rostersize' = the number of players listed that year for that team.
+
+e. [2 + 0 points] Create a dataset 'Teamdata' by taking the data from the Teams dataset for the years 1984 to 2016, inclusive and adding to that data the variables in TeamSalaries. Drop any incomplete cases from the dataset.
+
+
+# 2. Simple Linear Regression
+
+a.  [2 + 2 points] Create one plot of mean team salaries over time from 1984 to 2016, and another of the log base 10 of team mean salaries over time from 1984 to 2016.  Give two reasons why a linear model is more appropriate for log base 10 mean salaries than for raw mean salaries.
+
+b. [1 + 3 points] Fit a model of $log_{10}$(meansalary) as a function of yearID.  Write the form of the model and explain what the Multiple R-Squared tells us.
+
+c.  [1 + 8 points] State and evaluate the four assumptions of linear models for this data.
+
+d.  [3 + 1 points] Plot confidence and prediction bands for this model.  Colour the points according to who won the World Series each year.  Comment on what you find.
+
+ e. [1 + 1 points] Investigate the points that appear above the top prediction band.  What team or teams do they relate to?
+
+
+# 3. Multiple regression for Count Data
+
+a. [2 + 2 points] Create a histogram of the number of runs scored for players in the Playerdata dataset so each bar is a single value (0,1,2 runs, etc).  Next create a histogram of the number of runs for all players who have had a hit. Give a domain-based and a data-based reason why it is more reasonable to create a Poisson data for the second set than the first.  
+
+b.  [3 + 0 points] Create a new dataset, OnBase of all players who have had at least one hit.  Transform yearID to a factor.  Construct a Poisson model, glm1, of the number of runs as a function of the number of hits, the year as a factor, position played and player height and age.
+
+c.  [2 + 4 points] Find the p-value for each of the predictor variables in this model using a Likelihood Ratio Test.  What hypothesis does each p-value test, and what mathematically does a p-value tell you about a variable?  Use this definition to say what is meant by the p-value associated to POS and to the p-value associated to height.
+
+d. [1 + 8 points] State the assumptions of Poisson models and check these where possible.
+
+e. [2 + 4 points] Now create a new model that includes teamID as a random effect.  Ensure there are no fit warnings.  What does the result tell us about the importance of team on number of runs that players score?  Is this a relatively large or small effect?  How could we check the statistical significance of this effect in R?
+
+f. [2 + 0 points] What is the mean number of runs could you expect 30-year old, 72 inch tall outfielders playing for the Baltimore Orioles in 2015 with 20 hits to have scored?  
+
+# 4.  Lasso Regression for Logistic Regression
+
+a. [4 + 0 points] Create a new dataset DivWinners by removing all of the variables that are team or park identifiers in the dataset, as well as 'lgID', 'Rank','franchID','divID', 'WCWin','LgWin', and 'WSwin'.
+Split the resulting into a training and a testing set so that the variable 'DivWin' is balanced between the two datasets.  Use the seed 123.
+
+
+b.  [4 + 0 points] Use the training data to fit a logistic regression model using the 'glmnet' command.  Plot residual deviance against number of predictors.  
+
+c.  [2 + 2 points] How many nonzero model coefficients are needed to explain 50% of the deviance? 60%?  Which coefficients are these in each case?  
+
+d.  [2 + 1 points] Now use cross-validation to choose a moderately conservative model.  State the variables you will include.
+
+e.  [4 + 2 points] Fit the model on the training data, then predict on the testing data.  Plot comparative ROC curves and summarise your findings.
+
+f.  [4 + 2 points] Find Youden's index for the training data and calculate confusion matrices at this cutoff for both training and testing data.  Comment on the quality of the model for prediction in terms of false negative and false positive rates for the testing data.
+
+g.  [5 + 1 points] Calculate the sensitivity+specificity on the testing data as a function of divID and plot as a barchart.  Is the prediction equally good for all divisions?  
